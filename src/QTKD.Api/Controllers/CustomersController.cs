@@ -1,16 +1,26 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using QTKD.Api.Infrastructure;
+using QTKD.Api.Application;
 
 namespace QTKD.Api.Controllers;
 
 [ApiController]
 [Route("api/customers")]
-public class CustomersController(QtkdDbContext db) : ControllerBase
+public class CustomersController(CustomerService svc) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetAll() =>
-        Ok(await db.Customers.AsNoTracking()
-            .Select(c => new { c.Id, c.Name, Status = c.Status.ToString() })
-            .ToListAsync());
+    public async Task<IActionResult> GetAll(CancellationToken ct) => Ok(await svc.GetAllAsync(ct));
+
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetById(Guid id, CancellationToken ct) => Ok(await svc.GetAsync(id, ct));
+
+    [HttpPost]
+    public async Task<IActionResult> Create(CustomerRequest request, CancellationToken ct)
+    {
+        var result = await svc.CreateAsync(request, ct);
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+    }
+
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Update(Guid id, CustomerRequest request, CancellationToken ct) =>
+        Ok(await svc.UpdateAsync(id, request, ct));
 }

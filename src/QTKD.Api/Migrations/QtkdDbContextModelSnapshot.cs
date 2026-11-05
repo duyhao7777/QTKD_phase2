@@ -22,6 +22,45 @@ namespace QTKD.Api.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("QTKD.Api.Domain.ApprovalInstance", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("ContractId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("IdempotencyKey")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<DateTime>("SubmittedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("SubmittedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContractId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_Approval_OnePendingPerContract")
+                        .HasFilter("\"Status\" = 'Pending'");
+
+                    b.ToTable("ApprovalInstances");
+                });
+
             modelBuilder.Entity("QTKD.Api.Domain.Contract", b =>
                 {
                     b.Property<Guid>("Id")
@@ -73,6 +112,47 @@ namespace QTKD.Api.Migrations
                             StartDate = new DateOnly(2026, 10, 1),
                             Status = "Draft"
                         });
+                });
+
+            modelBuilder.Entity("QTKD.Api.Domain.ContractHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ActedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ActedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("ContractId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("FromStatus")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("ToStatus")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContractId");
+
+                    b.ToTable("ContractHistories");
                 });
 
             modelBuilder.Entity("QTKD.Api.Domain.Customer", b =>
@@ -187,6 +267,17 @@ namespace QTKD.Api.Migrations
                         });
                 });
 
+            modelBuilder.Entity("QTKD.Api.Domain.ApprovalInstance", b =>
+                {
+                    b.HasOne("QTKD.Api.Domain.Contract", "Contract")
+                        .WithMany()
+                        .HasForeignKey("ContractId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Contract");
+                });
+
             modelBuilder.Entity("QTKD.Api.Domain.Contract", b =>
                 {
                     b.HasOne("QTKD.Api.Domain.Customer", "Customer")
@@ -196,6 +287,17 @@ namespace QTKD.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("QTKD.Api.Domain.ContractHistory", b =>
+                {
+                    b.HasOne("QTKD.Api.Domain.Contract", "Contract")
+                        .WithMany()
+                        .HasForeignKey("ContractId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Contract");
                 });
 
             modelBuilder.Entity("QTKD.Api.Domain.PriceItem", b =>

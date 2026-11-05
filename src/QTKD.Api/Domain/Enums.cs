@@ -1,7 +1,7 @@
 namespace QTKD.Api.Domain;
 
 public enum CustomerStatus { Active, Inactive }
-
+public enum ApprovalStatus { Pending, Approved, Rejected, Cancelled }
 public enum ContractStatus
 {
     Draft, Submitted, PendingApproval, UnderReview, RevisionRequested,

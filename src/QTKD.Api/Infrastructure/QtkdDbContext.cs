@@ -9,7 +9,8 @@ public class QtkdDbContext(DbContextOptions<QtkdDbContext> options) : DbContext(
     public DbSet<Contract> Contracts => Set<Contract>();
     public DbSet<PriceList> PriceLists => Set<PriceList>();
     public DbSet<PriceItem> PriceItems => Set<PriceItem>();
-
+    public DbSet<ApprovalInstance> ApprovalInstances => Set<ApprovalInstance>();
+    public DbSet<ContractHistory> ContractHistories => Set<ContractHistory>();
     protected override void OnModelCreating(ModelBuilder b)
     {
         b.Entity<Customer>(e =>
@@ -41,7 +42,30 @@ public class QtkdDbContext(DbContextOptions<QtkdDbContext> options) : DbContext(
             e.HasOne(x => x.PriceList).WithMany(p => p.Items)
              .HasForeignKey(x => x.PriceListId).OnDelete(DeleteBehavior.Cascade);
         });
+        b.Entity<ApprovalInstance>(e =>
+        {
+            e.Property(x => x.Status).HasConversion<string>().HasMaxLength(30);
+            e.Property(x => x.SubmittedBy).IsRequired().HasMaxLength(100);
+            e.Property(x => x.IdempotencyKey).HasMaxLength(100);
+            e.HasOne(x => x.Contract).WithMany()
+            .HasForeignKey(x => x.ContractId).OnDelete(DeleteBehavior.Restrict);
 
+            // AC05: mỗi hợp đồng chỉ có tối đa một phiên Pending (chặn gửi đồng thời ở mức DB)
+            e.HasIndex(x => x.ContractId)
+            .IsUnique()
+            .HasFilter("\"Status\" = 'Pending'")
+            .HasDatabaseName("UX_Approval_OnePendingPerContract");
+        });
+
+        b.Entity<ContractHistory>(e =>
+        {
+            e.Property(x => x.Action).IsRequired().HasMaxLength(50);
+            e.Property(x => x.FromStatus).HasConversion<string>().HasMaxLength(30);
+            e.Property(x => x.ToStatus).HasConversion<string>().HasMaxLength(30);
+            e.Property(x => x.ActedBy).IsRequired().HasMaxLength(100);
+            e.HasOne(x => x.Contract).WithMany()
+            .HasForeignKey(x => x.ContractId).OnDelete(DeleteBehavior.Restrict);
+        });
         Seed(b);
     }
 
