@@ -140,7 +140,7 @@ public class ContractService(QtkdDbContext db)
             await db.SaveChangesAsync(ct);
         }
         catch (DbUpdateException ex) when (ex.InnerException is PostgresException
-                                           { SqlState: PostgresErrorCodes.UniqueViolation })
+                                           { SqlState: PostgresErrorCodes.UniqueViolation or PostgresErrorCodes.DeadlockDetected })
         {
             // Có yêu cầu khác đã gửi cùng hợp đồng trước (AC05)
             db.ChangeTracker.Clear();
@@ -160,7 +160,7 @@ public class ContractService(QtkdDbContext db)
                 .FirstOrDefaultAsync(a => a.ContractId == contractId && a.IdempotencyKey == key, ct);
 
     /// CTR-02 (giả định, xem docs/api.md mục 4)
-    private static List<ErrorItem> ValidateForSubmit(Contract c)
+    public static List<ErrorItem> ValidateForSubmit(Contract c)
     {
         var e = new List<ErrorItem>();
         if (c.Customer.Status != CustomerStatus.Active)
