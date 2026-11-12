@@ -37,3 +37,20 @@ Hợp đồng mẫu: HD-2026-018, Công ty Minh Phát, trạng thái Draft.
 - Enum `ContractStatus` gồm các trạng thái theo sơ đồ trạng thái Phase 1 và thêm `PendingApproval` theo US03. Cần xác nhận quan hệ giữa `Submitted` và `PendingApproval`.
 - Contract có thêm `ServiceGroup` và `Content` để tuần 06 kiểm tra CTR-02. Danh sách nội dung/tệp bắt buộc chưa được xác nhận.
 - PriceList dùng `EffectiveFrom/EffectiveTo`, `Status`, `CustomerId` để chuẩn bị cho PRC-01 và PRC-02.
+
+## Kiểm thử
+
+Unit test (không cần database):
+```powershell
+dotnet test --filter "FullyQualifiedName~Unit"
+```
+
+Integration test cần một database PostgreSQL **riêng** (tên phải chứa "test"; database này bị xóa và tạo lại mỗi lần chạy):
+```powershell
+dotnet user-secrets init --project tests/QTKD.Tests
+dotnet user-secrets set "ConnectionStrings:Test" "Host=localhost;Port=5432;Database=qtkd_test;Username=postgres;Password=<mật khẩu>" --project tests/QTKD.Tests
+dotnet test
+```
+Có thể thay user-secrets bằng biến môi trường `QTKD_TEST_CONNECTION`.
+
+Báo cáo kiểm thử: `docs/test-report.md`. Lỗi còn tồn tại: xem mục 4 của báo cáo.
