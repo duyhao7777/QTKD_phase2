@@ -30,6 +30,7 @@
 | 403 | Không có quyền |
 | 404 | Không tìm thấy đối tượng |
 | 409 | Sai trạng thái, trùng dữ liệu hoặc xung đột |
+| 400 | INVALID_REQUEST | Body sai định dạng
 
 ## 2. Danh sách endpoint
 
